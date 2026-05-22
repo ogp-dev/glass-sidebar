@@ -44,6 +44,13 @@ const META: Record<
     iconColor: "text-slate-400",
     labelColor: "text-slate-400",
   },
+  pending: {
+    label: "Checking…",
+    glow: "",
+    iconBg: "bg-sky-500/15 border-sky-400/25",
+    iconColor: "text-sky-300",
+    labelColor: "text-sky-300",
+  },
 };
 
 export function CalmCard({ card }: Props) {
@@ -64,7 +71,11 @@ export function CalmCard({ card }: Props) {
           )}
         >
           <svg
-            className={cn("w-3 h-3", m.iconColor)}
+            className={cn(
+              "w-3 h-3",
+              m.iconColor,
+              card.state === "pending" && "animate-spin",
+            )}
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -72,7 +83,9 @@ export function CalmCard({ card }: Props) {
             strokeLinecap="round"
             strokeLinejoin="round"
           >
-            {card.state === "verified" ? (
+            {card.state === "pending" ? (
+              <circle cx="12" cy="12" r="9" strokeDasharray="38 22" />
+            ) : card.state === "verified" ? (
               <polyline points="20 6 9 17 4 12" />
             ) : card.state === "heads_up" ? (
               <path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7l3-7z" />
@@ -101,6 +114,11 @@ export function CalmCard({ card }: Props) {
       >
         {card.claim_text}
       </p>
+      {card.state === "pending" && (
+        <p className="mt-1.5 text-[12px] leading-[1.4] text-slate-500">
+          Verifying against the web…
+        </p>
+      )}
       {card.verdict && card.state === "heads_up" && (
         <p className="mt-1.5 text-[12.5px] leading-[1.4] text-slate-300">
           {card.verdict}

@@ -15,9 +15,11 @@ DO NOT extract:
 
 For each claim, output strict JSON in this exact schema, no markdown:
 
-{"claims": [{"text": "<verbatim quote>", "type": "<numeric|date|attribution|event>", "speaker": "<You|Guest>", "approx_end_ms": <int>}]}
+{"claims": [{"text": "<the claim, quoted faithfully>", "type": "<numeric|date|attribution|event>", "speaker": "<You|Guest>", "approx_end_ms": <int>}]}
 
 If no verifiable claims found in the window, output {"claims": []}.
+
+In the `text` field, write numbers the way people say them — compact units like `$10B`, `$250M`, `100K`, `1994` — never long strings of zeros.
 
 The window is provided as speaker-labeled lines: each line is prefixed with
 `[You @ <ms>]` or `[Guest @ <ms>]` — "You" is the podcast host, "Guest" is

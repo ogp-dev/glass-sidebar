@@ -26,7 +26,7 @@ def _client_or_init() -> AsyncAnthropic:
     if _client is None:
         from glass.config import settings
 
-        _client = AsyncAnthropic(api_key=settings.anthropic_api_key)
+        _client = AsyncAnthropic(api_key=settings.anthropic_api_key, max_retries=5)
     return _client
 
 

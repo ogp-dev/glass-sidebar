@@ -38,3 +38,7 @@ If state is partial or disputed, the correction field MUST give the host the act
 If confidence is below 50, default to "unverified" regardless of perceived state.
 
 If you cannot find a source that names the same subject entity as the claim, set state="unverified" and confidence below 50 — it is BETTER to surface uncertainty than to mislabel a wrong-entity source as a correction.
+
+## Numbers
+
+Write every number the way a person says it out loud — never as a long string of zeros. Use compact units: `$10B` (not 10000000000), `$250M`, `1.5M`, `$100K`. Keep years (2024), percentages (47%), and small counts (under ~10,000) as plain numbers. This applies to both `verdict` and `correction`.

@@ -40,6 +40,7 @@ interface CardsState {
   queuedCritical: CardWithMeta[];
 
   appendCard: (card: FactCardDTO) => void;
+  upsertCard: (card: FactCardDTO) => void;
   pinCard: (id: string, pinned: boolean) => void;
   dismissCard: (id: string) => void;
   restoreFromDemotedStrip: (id: string) => void;
@@ -122,6 +123,55 @@ export const useCardsStore = create<CardsState>()(
       } else {
         set({ queuedCritical: [...st.queuedCritical, m] });
       }
+    },
+
+    upsertCard: (card) => {
+      const st = get();
+      const inCritical = st.critical.some((c) => c.id === card.id);
+      const inCalm = st.calm.some((c) => c.id === card.id);
+      const inQueued = st.queuedCritical.some((c) => c.id === card.id);
+      const inDemoted = st.demotedStrip.some((c) => c.id === card.id);
+
+      // First time we see this id — place it like a fresh card.
+      if (!inCritical && !inCalm && !inQueued && !inDemoted) {
+        get().appendCard(card);
+        return;
+      }
+
+      const wasCritical = inCritical || inQueued || inDemoted;
+      const nowCritical = isCritical(card);
+
+      if (wasCritical === nowCritical) {
+        // Same zone family — merge the resolved content in place and keep the
+        // meta (dwell + detection time) so the card neither jumps nor resets.
+        const merge = (c: CardWithMeta): CardWithMeta =>
+          c.id === card.id
+            ? {
+                ...c,
+                ...card,
+                _dwellStartMs: c._dwellStartMs,
+                _detectedAtMs: c._detectedAtMs,
+              }
+            : c;
+        set({
+          critical: st.critical.map(merge),
+          calm: st.calm.map(merge),
+          queuedCritical: st.queuedCritical.map(merge),
+          demotedStrip: st.demotedStrip.map(merge),
+        });
+        return;
+      }
+
+      // Zone changed — a "checking" card in calm resolved to disputed/partial.
+      // Drop it from the old zone, then re-place via appendCard so the
+      // critical-zone slot logic applies.
+      set({
+        critical: st.critical.filter((c) => c.id !== card.id),
+        calm: st.calm.filter((c) => c.id !== card.id),
+        queuedCritical: st.queuedCritical.filter((c) => c.id !== card.id),
+        demotedStrip: st.demotedStrip.filter((c) => c.id !== card.id),
+      });
+      get().appendCard(card);
     },
 
     pinCard: (id, pinned) =>

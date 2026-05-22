@@ -165,6 +165,31 @@ async def claim_detect_job(ctx: dict[str, Any], session_id: str, window_end_ms: 
                 d.claim_type,
                 speaker,
             )
+
+        # Surface the card immediately in a "checking" state — the user sees a
+        # response within ~2s instead of waiting out the full verify pipeline.
+        # research_and_verify_job (or the cache path below) re-publishes the
+        # same id with the resolved verdict; the dashboard upserts by id.
+        await bus.publish(
+            session_id,
+            {
+                "kind": "card",
+                "id": str(cid),
+                "claim_text": d.text,
+                "claim_type": d.claim_type,
+                "state": "pending",
+                "verdict": None,
+                "correction": None,
+                "confidence": None,
+                "sources": [],
+                "pinned": False,
+                "source": "auto",
+                "zone": "calm",
+                "query_echo": None,
+                "speaker": speaker,
+            },
+        )
+
         # Anticipation cache check — if we've already verified this exact claim
         # in the last hour (any session), use the cached verdict and skip the
         # full verify pipeline. cache_hit=True lets the frontend show a tiny

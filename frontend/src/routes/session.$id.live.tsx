@@ -30,6 +30,7 @@ export function LiveRoute() {
   const setPartial = useSessionStore((s) => s.setPartial);
   const appendLine = useSessionStore((s) => s.appendLine);
   const appendCard = useCardsStore((s) => s.appendCard);
+  const upsertCard = useCardsStore((s) => s.upsertCard);
   const pinCardLocal = useCardsStore((s) => s.pinCard);
   const setRMS = useAudioStore((s) => s.setRMS);
   const { getToken } = useAuth();
@@ -114,7 +115,7 @@ export function LiveRoute() {
             speaker_label: ev.speaker_label,
           });
         } else if (ev.kind === "card") {
-          appendCard({
+          upsertCard({
             id: ev.id,
             claim_text: ev.claim_text,
             claim_type: ev.claim_type,
@@ -167,7 +168,7 @@ export function LiveRoute() {
       if (helperLaunchTimer.current) clearTimeout(helperLaunchTimer.current);
       if (helperFallbackTimer.current) clearTimeout(helperFallbackTimer.current);
     };
-  }, [id, setPartial, appendLine, appendCard, pinCardLocal, setRMS, getToken]);
+  }, [id, setPartial, appendLine, appendCard, upsertCard, pinCardLocal, setRMS, getToken]);
 
   useEffect(() => {
     // In helper mode the Mac helper feeds audio; while paused, nothing

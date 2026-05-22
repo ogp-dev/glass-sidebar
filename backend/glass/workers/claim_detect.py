@@ -12,13 +12,16 @@ log = structlog.get_logger(__name__)
 _PROMPT_PATH = Path(__file__).parent.parent / "prompts" / "claim_detect.txt"
 _SYSTEM_PROMPT = _PROMPT_PATH.read_text()
 
-_MODEL = "claude-haiku-4-5-20251001"
+# NOTE: normally Haiku 4.5 (fast + cheap for frequent rolling detection).
+# Temporarily on Sonnet 4.6 during the 2026-05-22 Anthropic incident that
+# left Haiku 4.5 returning 529s — flip back to Haiku once it recovers.
+_MODEL = "claude-sonnet-4-6"
 
 
 def _make_client() -> AsyncAnthropic:
     from glass.config import settings
 
-    return AsyncAnthropic(api_key=settings.anthropic_api_key)
+    return AsyncAnthropic(api_key=settings.anthropic_api_key, max_retries=5)
 
 
 # Lazy client: module-level _client = None until first use. This dodges the
