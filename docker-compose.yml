@@ -1,0 +1,67 @@
+# Glass Sidebar — backend stack (API + worker + Postgres + Redis).
+# Copy .env.docker.example to .env, add your API keys, then: docker compose up
+# The frontend runs separately — see the README.
+name: glass-sidebar
+
+x-backend-env: &backend-env
+  DATABASE_URL: postgresql://glass:glass_dev@postgres:5432/glass
+  REDIS_URL: redis://redis:6379/0
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+  DEEPGRAM_API_KEY: ${DEEPGRAM_API_KEY:-}
+  EXA_API_KEY: ${EXA_API_KEY:-}
+  DEV_MODE: "true"
+  CLERK_JWKS_URL: ${CLERK_JWKS_URL:-https://example.clerk.accounts.dev/.well-known/jwks.json}
+  CLERK_ISSUER: ${CLERK_ISSUER:-https://example.clerk.accounts.dev}
+  LOG_LEVEL: INFO
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: glass
+      POSTGRES_PASSWORD: glass_dev
+      POSTGRES_DB: glass
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U glass -d glass"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment: *backend-env
+    command: sh -c "uv run alembic upgrade head && uv run uvicorn glass.api.main:app --host 0.0.0.0 --port 8000"
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    restart: unless-stopped
+
+  worker:
+    build: ./backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment: *backend-env
+    command: uv run arq glass.workers.arq_settings.WorkerSettings
+    restart: unless-stopped
+
+volumes:
+  pgdata:

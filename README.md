@@ -65,34 +65,44 @@ warm before a claim is even finished.
 | Reasoning | Claude (Anthropic) |
 | Web search | Exa |
 
-## Run it locally
+## Run it
 
-You need **Python 3.12**, **Node**, [uv](https://docs.astral.sh/uv/),
-[pnpm](https://pnpm.io/), a **Postgres** database and **Redis** — plus API keys
-for **Anthropic**, **Deepgram**, and **Exa**.
-
-**Backend**
+The backend, worker, Postgres, and Redis come up with one command via Docker.
+You need [Docker](https://docs.docker.com/get-docker/), API keys for
+**Anthropic**, **Deepgram**, and **Exa**, and a free **Clerk** publishable key
+for the frontend ([clerk.com](https://clerk.com/) — the free tier is plenty).
 
 ```bash
-cd backend
-cp .env.example .env     # set DATABASE_URL, REDIS_URL and the three API keys;
-                         # set DEV_MODE=true to skip the auth-provider setup
-uv sync
-uv run alembic upgrade head
-uv run uvicorn glass.api.main:app --port 8000          # API
-uv run arq glass.workers.arq_settings.WorkerSettings   # worker — separate shell
+cp .env.docker.example .env     # paste your Anthropic / Deepgram / Exa keys
+docker compose up               # backend API on http://localhost:8000
 ```
 
-**Frontend**
+Auth is bypassed on the backend (`DEV_MODE`). Then start the frontend:
 
 ```bash
 cd frontend
-cp .env.example .env     # defaults work for a local backend
+cp .env.example .env            # set VITE_CLERK_PUBLISHABLE_KEY
 pnpm install
 pnpm dev
 ```
 
 Open the URL Vite prints, click **Start**, and play a podcast.
+
+<details>
+<summary>Run the backend without Docker</summary>
+
+Needs Python 3.12, [uv](https://docs.astral.sh/uv/), Postgres, and Redis.
+
+```bash
+cd backend
+cp .env.example .env     # set DATABASE_URL, REDIS_URL, the three API keys;
+                         # set DEV_MODE=true to bypass backend auth
+uv sync
+uv run alembic upgrade head
+uv run uvicorn glass.api.main:app --port 8000          # API
+uv run arq glass.workers.arq_settings.WorkerSettings   # worker — separate shell
+```
+</details>
 
 ## The Mac helper (optional)
 
