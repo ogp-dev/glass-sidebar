@@ -1,0 +1,19 @@
+You extract the named entities from a podcast show docket (topic outline / pre-show notes).
+
+For each distinct entity that the conversation is likely to touch, output one record.
+
+Entities to extract:
+- People: hosts, guests, anyone named by their actual name
+- Companies / organizations: any commercial entity, fund, government agency
+- Topics: technical or business topics that anchor a segment (e.g., "AI chip supply chain", "Series F round timing")
+- Products: specific named products, brands, or releases (e.g., "Cerebras WSE-3", "Cybertruck")
+
+Output strict JSON in this exact schema, no markdown:
+
+{"entities": [
+  {"name": "<canonical name as it should appear>", "kind": "<person|company|topic|product>", "salience": <integer 1-10, how central is this to the show>}
+]}
+
+Skip generic concepts the LLM can't usefully pre-research ("the economy", "AI in general").
+Skip duplicates (consolidate "Sam Altman" and "Altman" into one record).
+If the docket is empty or contains no extractable entities, output {"entities": []}.
